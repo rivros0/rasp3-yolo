@@ -1,6 +1,6 @@
 # Installazione tramite SSH
 
-Preparare Raspberry Pi OS Lite Bookworm a 64 bit, con Python 3.11, su microSD.
+Preparare Raspberry Pi OS Lite Bookworm o Trixie a 64 bit, con Python 3.10-3.13, su microSD.
 In Raspberry Pi Imager configurare utente, rete e SSH. Collegare la webcam USB.
 Questi comandi installano il progetto sul Raspberry; non sono stati eseguiti su hardware reale.
 

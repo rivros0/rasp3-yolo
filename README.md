@@ -41,7 +41,7 @@ FastAPI
 ## Installazione rapida su Raspberry Pi OS
 
 Per clonare e configurare da SSH seguire [la guida completa](docs/installazione_ssh.md).
-Configurazione prevista: Raspberry Pi OS Lite Bookworm **64 bit**, Python 3.11.
+Configurazione prevista: Raspberry Pi OS Lite Bookworm o Trixie **64 bit**, Python 3.10-3.13.
 
 ```bash
 sudo apt update
