@@ -1,0 +1,170 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #151718;
+  color: #f5f7f2;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 18px;
+  min-height: 100vh;
+  padding: 18px;
+}
+
+.video-panel,
+.side-panel section {
+  background: #202425;
+  border: 1px solid #343b3b;
+  border-radius: 8px;
+}
+
+.video-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.video-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 1.5rem;
+}
+
+h2 {
+  margin-bottom: 12px;
+  font-size: 1rem;
+}
+
+p {
+  margin-top: 4px;
+  color: #aeb8b5;
+}
+
+#stream {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+  background: #070808;
+}
+
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.side-panel section {
+  padding: 16px;
+}
+
+.status {
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: #363d3d;
+  color: #dce6e1;
+  font-size: 0.85rem;
+}
+
+.status.ok {
+  background: #174732;
+  color: #9df0bc;
+}
+
+.status.error {
+  background: #592424;
+  color: #ffb5ad;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  color: #d8ddd9;
+}
+
+.control-row {
+  display: grid;
+  grid-template-columns: 1fr 52px;
+  gap: 10px;
+  align-items: center;
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+button {
+  width: 100%;
+  margin-top: 12px;
+  border: 0;
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: #34c27a;
+  color: #08130d;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.detections {
+  display: grid;
+  gap: 8px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.detections li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid #343b3b;
+  padding-bottom: 8px;
+}
+
+a,
+code {
+  display: block;
+  color: #9df0bc;
+}
+
+code {
+  margin-top: 8px;
+  color: #d1d8d4;
+}
+
+@media (max-width: 860px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  #stream {
+    min-height: 280px;
+  }
+}
+
