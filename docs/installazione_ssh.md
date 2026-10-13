@@ -25,7 +25,7 @@ cd rasp3-yolo
 bash scripts/setup_raspberry.sh
 bash scripts/install_service.sh
 sudo systemctl status rasp3-yolo --no-pager
-curl --fail http://localhost:8000/api/health
+curl --fail --retry 12 --retry-connrefused --retry-delay 5 http://localhost:8000/api/health
 hostname -I
 ```
 
