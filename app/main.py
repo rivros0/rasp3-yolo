@@ -21,6 +21,8 @@ class AppState:
         self.camera: Camera | None = None
         self.detector: YOLODetector | None = None
         self.model_path = "yolov8n.pt"
+        self.video_fps = 0.0
+        self.video_clients = 0
 
 
 state = AppState()
@@ -29,9 +31,11 @@ state = AppState()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     state.camera.start()
+    state.detector.start(state.camera)
     try:
         yield
     finally:
+        state.detector.stop()
         state.camera.stop()
 
 
@@ -64,6 +68,9 @@ def health() -> HealthResponse:
         frame_width=width,
         frame_height=height,
         **camera.status(),
+        video_fps=state.video_fps if frame is not None and state.video_clients else 0.0,
+        video_clients=state.video_clients,
+        **_detector().metrics(camera.snapshot()[1], frame is not None),
     )
 
 
@@ -109,21 +116,34 @@ async def stream() -> StreamingResponse:
     offline_jpg = encode_jpeg(np.zeros((240, 320, 3), dtype=np.uint8))
 
     async def frames():
-        while True:
-            frame, generation = _camera().snapshot()
-            if frame is not None:
-                annotated = await asyncio.to_thread(_detector().process, frame, generation)
-                current, current_generation = _camera().snapshot()
-                jpg = encode_jpeg(annotated.image) if current is not None and generation == current_generation else offline_jpg
-            else:
-                jpg = offline_jpg
-            yield (
-                b"--frame\r\n"
-                b"Content-Type: image/jpeg\r\n\r\n"
-                + jpg
-                + b"\r\n"
-            )
-            await asyncio.sleep(0.03)
+        state.video_clients += 1
+        measured_at = time.monotonic()
+        frames_sent = 0
+        try:
+            while True:
+                frame, generation = _camera().snapshot()
+                if frame is not None:
+                    annotated = _detector().process(frame, generation)
+                    jpg = encode_jpeg(annotated.image)
+                else:
+                    jpg = offline_jpg
+                yield (
+                    b"--frame\r\n"
+                    b"Content-Type: image/jpeg\r\n\r\n"
+                    + jpg
+                    + b"\r\n"
+                )
+                frames_sent += 1
+                elapsed = time.monotonic() - measured_at
+                if elapsed >= 1:
+                    state.video_fps = round(frames_sent / elapsed, 2)
+                    measured_at = time.monotonic()
+                    frames_sent = 0
+                await asyncio.sleep(1 / 15)
+        finally:
+            state.video_clients -= 1
+            if not state.video_clients:
+                state.video_fps = 0.0
 
     return StreamingResponse(
         frames(),

@@ -37,3 +37,9 @@ class HealthResponse(BaseModel):
     camera_state: str
     camera_source: str | None
     camera_generation: int
+    video_fps: float
+    video_clients: int
+    inference_fps: float
+    inference_ms: float
+    detection_age_ms: float | None
+    inference_error: str | None

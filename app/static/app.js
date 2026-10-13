@@ -36,7 +36,7 @@ async function refresh() {
     ]);
 
     statusEl.textContent = health.ok
-      ? `Online - ${health.fps_estimate} FPS`
+      ? `Video ${health.video_fps} FPS | YOLO ${health.inference_fps} FPS | ${health.inference_ms} ms`
       : "Webcam non collegata";
     statusEl.className = health.ok ? "status ok" : "status error";
     showCamera(health.ok);

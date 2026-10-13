@@ -12,6 +12,17 @@ Il progetto include:
 
 ## Sostituzione della webcam
 
+Lo streaming e il riconoscimento sono indipendenti: un solo worker YOLO elabora
+l'ultimo frame disponibile, anche quando nessun browser e' aperto. Il video
+riutilizza gli ultimi rettangoli, che possono essere in ritardo sui movimenti.
+L'inferenza usa `imgsz=320` su CPU; lo streaming punta a 15 FPS, da verificare
+sull'hardware. Non viene accumulata una coda di immagini da riconoscere.
+
+`/api/health` distingue `fps_estimate` (acquisizione), `video_fps` (invio server
+misurato sull'ultima connessione che aggiorna la misura, non rendering browser),
+`inference_fps`, `inference_ms`, `detection_age_ms` e `inference_error`.
+Gli FPS video includono eventuali frame ripetuti e sono zero senza client.
+
 La sorgente predefinita e' `--camera auto`: il server cerca i dispositivi Linux
 `/dev/video*` e usa il primo che produce un fotogramma valido. Se la webcam viene
 scollegata, cancella il frame corrente e riprova ogni due secondi. Il server puo'

@@ -23,10 +23,72 @@ class YOLODetector:
         self.model = YOLO(model_path)
         self.names = self.model.names
         self._last_result: DetectionResponse | None = None
-        self._last_annotated: np.ndarray | None = None
-        self._last_inference_at = 0.0
         self._generation: int | None = None
         self._lock = threading.Lock()
+        self._stop = threading.Event()
+        self._thread: threading.Thread | None = None
+        self._inference_ms = 0.0
+        self._completed_at = 0.0
+        self._inference_fps = 0.0
+        self._error: str | None = None
+
+    def start(self, camera) -> None:
+        if self._thread and self._thread.is_alive():
+            return
+        self._stop.clear()
+        self._thread = threading.Thread(target=self._run, args=(camera,), daemon=True)
+        self._thread.start()
+
+    def stop(self) -> None:
+        self._stop.set()
+        if self._thread:
+            self._thread.join(timeout=2)
+
+    def _run(self, camera) -> None:
+        while not self._stop.is_set():
+            frame, generation = camera.snapshot()
+            if frame is None:
+                with self._lock:
+                    self._last_result = None
+                    self._inference_fps = 0.0
+                    self._completed_at = 0.0
+                self._stop.wait(0.1)
+                continue
+            started = time.monotonic()
+            try:
+                result = self._detect(frame)
+                current, current_generation = camera.snapshot()
+                if current is not None and current_generation == generation:
+                    completed = time.monotonic()
+                    with self._lock:
+                        same_session = self._generation == generation
+                        self._inference_fps = (1 / (completed - self._completed_at)
+                                               if same_session and self._completed_at else 0.0)
+                        self._generation = generation
+                        self._last_result = result
+                        self._inference_ms = (completed - started) * 1000
+                        self._completed_at = completed
+                        self._error = None
+            except Exception as error:
+                with self._lock:
+                    self._last_result = None
+                    self._error = str(error)
+                    self._inference_fps = 0.0
+                    self._completed_at = 0.0
+                self._stop.wait(1.0)
+            remaining = self.config.inference_interval - (time.monotonic() - started)
+            self._stop.wait(max(0.01, remaining))
+
+    def metrics(self, generation: int, connected: bool) -> dict:
+        with self._lock:
+            valid = connected and self._generation == generation
+            return {
+                "inference_fps": round(self._inference_fps, 2) if valid else 0.0,
+                "inference_ms": round(self._inference_ms, 1) if valid else 0.0,
+                "detection_age_ms": round((time.monotonic() - self._completed_at) * 1000, 1)
+                if valid and self._completed_at else None,
+                "inference_error": self._error,
+            }
 
     def class_names(self) -> dict[int, str]:
         return {int(k): str(v) for k, v in self.names.items()}
@@ -36,41 +98,23 @@ class YOLODetector:
         return self.config
 
     def process(self, frame: np.ndarray, generation: int = 0) -> AnnotatedFrame:
-        with self._lock:
-            if self._generation != generation:
-                self._last_result = None
-                self._generation = generation
-            return self._process(frame)
-
-    def _process(self, frame: np.ndarray) -> AnnotatedFrame:
-        now = time.time()
-        should_infer = (
-            self._last_result is None
-            or now - self._last_inference_at >= self.config.inference_interval
-        )
-
-        if should_infer:
-            self._last_result = self._detect(frame)
-            self._last_inference_at = now
-
         annotated = frame.copy()
-        result = self._last_result or self._empty_result(frame)
+        result = self.last_result(frame, generation)
         self._draw(annotated, result.detections)
-        self._last_annotated = annotated
         return AnnotatedFrame(image=annotated, result=result)
 
     def last_result(self, frame: np.ndarray | None = None, generation: int = 0) -> DetectionResponse:
-        # Read the published result without waiting for a slow inference.
-        result = self._last_result
-        if result is not None and self._generation == generation:
-            return result
+        with self._lock:
+            result = self._last_result
+            if result is not None and self._generation == generation:
+                return result
         if frame is not None:
             return self._empty_result(frame)
         return DetectionResponse(timestamp=time.time(), width=0, height=0, detections=[])
 
     def _detect(self, frame: np.ndarray) -> DetectionResponse:
         height, width = frame.shape[:2]
-        predictions = self.model.predict(frame, conf=self.config.confidence, verbose=False)
+        predictions = self.model.predict(frame, conf=self.config.confidence, imgsz=320, device="cpu", verbose=False)
         detections: list[Detection] = []
 
         if predictions:
