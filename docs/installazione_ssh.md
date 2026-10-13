@@ -43,7 +43,8 @@ curl --fail http://localhost:8000/api/classes
 curl --fail http://localhost:8000/api/detections
 ```
 
-Se la webcam non e' l'indice 0, fermare il servizio e provare l'indice corretto:
+La selezione predefinita e' automatica e riprende dopo la sostituzione della webcam.
+Per forzare una webcam specifica, fermare il servizio e provare l'indice corretto:
 
 ```bash
 sudo systemctl stop rasp3-yolo

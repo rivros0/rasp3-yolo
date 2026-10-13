@@ -3,6 +3,15 @@ const detectionsEl = document.querySelector("#detections");
 const confidenceEl = document.querySelector("#confidence");
 const confidenceValueEl = document.querySelector("#confidenceValue");
 const saveConfigEl = document.querySelector("#saveConfig");
+const streamEl = document.querySelector("#stream");
+const cameraMessageEl = document.querySelector("#cameraMessage");
+let cameraGeneration = null;
+
+function showCamera(connected, message = "Webcam non collegata") {
+  streamEl.hidden = !connected;
+  cameraMessageEl.hidden = connected;
+  cameraMessageEl.textContent = message;
+}
 
 confidenceEl.addEventListener("input", () => {
   confidenceValueEl.textContent = Number(confidenceEl.value).toFixed(2);
@@ -28,8 +37,13 @@ async function refresh() {
 
     statusEl.textContent = health.ok
       ? `Online - ${health.fps_estimate} FPS`
-      : "Webcam non pronta";
+      : "Webcam non collegata";
     statusEl.className = health.ok ? "status ok" : "status error";
+    showCamera(health.ok);
+    if (health.ok && cameraGeneration !== health.camera_generation) {
+      cameraGeneration = health.camera_generation;
+      streamEl.src = `/stream.mjpg?generation=${cameraGeneration}`;
+    }
 
     detectionsEl.innerHTML = "";
     if (result.detections.length === 0) {
@@ -51,6 +65,8 @@ async function refresh() {
   } catch (error) {
     statusEl.textContent = "Errore API";
     statusEl.className = "status error";
+    showCamera(false, "Connessione al server non disponibile");
+    detectionsEl.replaceChildren();
   }
 }
 
@@ -63,4 +79,3 @@ fetch("/api/config")
 
 setInterval(refresh, 1000);
 refresh();
-

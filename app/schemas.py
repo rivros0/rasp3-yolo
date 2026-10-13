@@ -34,4 +34,6 @@ class HealthResponse(BaseModel):
     fps_estimate: float
     frame_width: int
     frame_height: int
-
+    camera_state: str
+    camera_source: str | None
+    camera_generation: int

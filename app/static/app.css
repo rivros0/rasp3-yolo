@@ -72,6 +72,11 @@ p {
   background: #070808;
 }
 
+#cameraMessage {
+  padding: 32px 16px;
+  text-align: center;
+}
+
 .side-panel {
   display: flex;
   flex-direction: column;
@@ -167,4 +172,3 @@ code {
     min-height: 280px;
   }
 }
-

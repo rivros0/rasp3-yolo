@@ -1,4 +1,5 @@
 import time
+import threading
 from dataclasses import dataclass
 
 import cv2
@@ -24,6 +25,8 @@ class YOLODetector:
         self._last_result: DetectionResponse | None = None
         self._last_annotated: np.ndarray | None = None
         self._last_inference_at = 0.0
+        self._generation: int | None = None
+        self._lock = threading.Lock()
 
     def class_names(self) -> dict[int, str]:
         return {int(k): str(v) for k, v in self.names.items()}
@@ -32,7 +35,14 @@ class YOLODetector:
         self.config = config
         return self.config
 
-    def process(self, frame: np.ndarray) -> AnnotatedFrame:
+    def process(self, frame: np.ndarray, generation: int = 0) -> AnnotatedFrame:
+        with self._lock:
+            if self._generation != generation:
+                self._last_result = None
+                self._generation = generation
+            return self._process(frame)
+
+    def _process(self, frame: np.ndarray) -> AnnotatedFrame:
         now = time.time()
         should_infer = (
             self._last_result is None
@@ -49,9 +59,11 @@ class YOLODetector:
         self._last_annotated = annotated
         return AnnotatedFrame(image=annotated, result=result)
 
-    def last_result(self, frame: np.ndarray | None = None) -> DetectionResponse:
-        if self._last_result is not None:
-            return self._last_result
+    def last_result(self, frame: np.ndarray | None = None, generation: int = 0) -> DetectionResponse:
+        # Read the published result without waiting for a slow inference.
+        result = self._last_result
+        if result is not None and self._generation == generation:
+            return result
         if frame is not None:
             return self._empty_result(frame)
         return DetectionResponse(timestamp=time.time(), width=0, height=0, detections=[])
@@ -114,4 +126,3 @@ def encode_jpeg(frame: np.ndarray, quality: int = 80) -> bytes:
     if not ok:
         raise RuntimeError("Impossibile codificare il frame JPEG")
     return encoded.tobytes()
-

@@ -10,6 +10,26 @@ Il progetto include:
 - struttura modulare per cambiare modello YOLO o sorgente video;
 - guida di installazione e attività didattiche.
 
+## Sostituzione della webcam
+
+La sorgente predefinita e' `--camera auto`: il server cerca i dispositivi Linux
+`/dev/video*` e usa il primo che produce un fotogramma valido. Se la webcam viene
+scollegata, cancella il frame corrente e riprova ogni due secondi. Il server puo'
+partire anche senza webcam. Al collegamento di una nuova webcam riprende senza
+riavvio, azzerando i rilevamenti della sessione precedente.
+
+`/api/health` espone `camera_state` (`connected` o `waiting`), `camera_source` e
+`camera_generation`. Senza webcam, `/api/detections` restituisce una lista vuota,
+`/api/frame.jpg` risponde 503 e lo stream invia un'immagine vuota. La pagina mostra
+"Webcam non collegata". Un frame senza aggiornamenti per due secondi non viene
+piu' considerato valido.
+
+Per fissare una sorgente usare `--camera 0` oppure `--camera /dev/video2`:
+in questo caso la riconnessione riguarda soltanto quella sorgente.
+Servono webcam USB supportate dal driver Linux; risoluzione e FPS effettivi
+dipendono dal dispositivo. Un driver che blocca una lettura puo' ritardare la
+riconnessione; i tempi devono essere verificati con le webcam del laboratorio.
+
 ## Architettura
 
 ```text
