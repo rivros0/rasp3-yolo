@@ -112,7 +112,7 @@ def frame_jpg() -> Response:
 
 
 @app.get("/stream.mjpg")
-async def stream() -> StreamingResponse:
+async def stream(raw: bool = False) -> StreamingResponse:
     offline_jpg = encode_jpeg(np.zeros((240, 320, 3), dtype=np.uint8))
 
     async def frames():
@@ -123,8 +123,13 @@ async def stream() -> StreamingResponse:
             while True:
                 frame, generation = _camera().snapshot()
                 if frame is not None:
-                    annotated = _detector().process(frame, generation)
-                    jpg = encode_jpeg(annotated.image)
+                    if raw:
+                        # Modalita' video pulito per i box vettoriali nel browser.
+                        jpg = encode_jpeg(frame)
+                    else:
+                        # Compatibilita' con i client MJPEG gia' esistenti.
+                        annotated = _detector().process(frame, generation)
+                        jpg = encode_jpeg(annotated.image)
                 else:
                     jpg = offline_jpg
                 yield (
