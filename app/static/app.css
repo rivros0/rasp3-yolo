@@ -64,12 +64,27 @@ p {
   color: #aeb8b5;
 }
 
+.video-stage {
+  position: relative;
+  width: 100%;
+  background: #070808;
+}
+
 #stream {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.box-overlay {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  min-height: 0;
-  object-fit: contain;
-  background: #070808;
+  pointer-events: none;
+}
+.box-overlay[hidden] {
+  display: none;
 }
 
 #cameraMessage {
@@ -168,7 +183,4 @@ code {
     grid-template-columns: 1fr;
   }
 
-  #stream {
-    min-height: 280px;
-  }
 }
