@@ -192,3 +192,18 @@ Dopo aver verificato che il server funzioni:
 bash scripts/install_service.sh
 sudo systemctl status rasp3-yolo
 ```
+
+## Bounding box nitidi nella pagina web
+
+La pagina principale usa `/stream.mjpg?raw=true`: il video rimane alla
+risoluzione impostata dalla webcam (320x240 per impostazione predefinita),
+mentre le annotazioni sono disegnate in SVG dal browser in base ai dati
+di `/api/detections`. Ingrandendo la pagina, contorni e testi rimangono
+vettoriali senza aumentare il costo dell'inferenza YOLO.
+
+Per compatibilita', `/stream.mjpg` senza parametro continua a includere
+i bounding box OpenCV, e `/api/frame.jpg` rimane annotato.
+L'overlay e' aggiornato tramite polling ogni 250 ms; con oggetti in rapido
+movimento puo' esserci un disallineamento temporaneo tra video e box.
+Dopo l'aggiornamento del server, ricaricare la pagina ignorando la cache
+del browser (Ctrl+F5).
