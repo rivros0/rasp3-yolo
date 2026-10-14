@@ -16,7 +16,10 @@
           </div>
           <span id="status" class="status">Connessione...</span>
         </div>
-        <img id="stream" src="/stream.mjpg" alt="Stream webcam con bounding box" />
+        <div class="video-stage">
+          <img id="stream" src="/stream.mjpg?raw=true" alt="Video della webcam" />
+          <svg id="boxOverlay" class="box-overlay" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
         <p id="cameraMessage" hidden role="status">Webcam non collegata</p>
       </section>
 
