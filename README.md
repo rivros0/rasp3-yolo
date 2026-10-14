@@ -10,6 +10,17 @@ Il progetto include:
 - struttura modulare per cambiare modello YOLO o sorgente video;
 - guida di installazione e attività didattiche.
 
+## Documentazione tecnica
+
+Per comprendere **stack software, architettura, interfaccia web e flussi tra
+webcam, YOLO, API e browser**, consultare la
+[guida all'architettura e al frontend](docs/architettura.md).
+
+L'interfaccia web e' realizzata con **HTML5, CSS3 e JavaScript nativo**:
+FastAPI serve direttamente la pagina e i file statici, senza React, Node.js
+o un server frontend separato. Il browser riceve MJPEG non annotato e
+sovrappone le rilevazioni tramite SVG vettoriale, interrogando le API REST.
+
 ## Sostituzione della webcam
 
 Lo streaming e il riconoscimento sono indipendenti: un solo worker YOLO elabora
